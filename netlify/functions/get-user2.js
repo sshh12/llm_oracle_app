@@ -1,4 +1,4 @@
-const { PrismaClient, JobState } = require('@prisma/client');
+const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
@@ -22,7 +22,6 @@ exports.handler = async (event, context) => {
     body: JSON.stringify({
       id: user.id,
       credits: user.credits,
-      state: JobState.COMPLETE,
     }),
   };
 };
