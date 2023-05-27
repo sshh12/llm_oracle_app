@@ -66,6 +66,8 @@ function Predict({ userId, user }) {
     window.location.href = predictURL;
   };
 
+  const [modelToolTip, setModelToolTip] = useState(false);
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       setPlaceholderIdx((placeholderIdx + 1) % PREDICTION_PLACEHOLDERS.length);
@@ -110,8 +112,16 @@ function Predict({ userId, user }) {
                 label="Use GPT-4 as an agent with the ability to search the internet. Significantly improves detail of results and analysis. Requires paid predictions (uses 10 prediction credits)."
                 fontSize="sm"
                 mr={2}
+                isOpen={modelToolTip}
               >
-                Improve results with GPT-4
+                <Text
+                  onClick={() => setModelToolTip(true)}
+                  onMouseEnter={() => setModelToolTip(true)}
+                  onMouseLeave={() => setModelToolTip(false)}
+                  borderBotton="1px #8b8b8b dotted"
+                >
+                  Improve results with GPT-4
+                </Text>
               </Tooltip>
             </FormLabel>
 

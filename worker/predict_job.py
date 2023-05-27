@@ -53,10 +53,12 @@ async def run_job(prisma: Prisma, user: User, job: PredictionJob):
     else:
         is_demo = True
 
-    logging.info(f"Running job {job.id} as demo: {is_demo} (cost: {model_cost})")
+    demo_key_uses = await get_demo_key_recent_uses(prisma)
+    logging.info(
+        f"Running job {job.id} as demo: {is_demo} (cost: {model_cost}, model: {model_name}) (demo uses: {demo_key_uses})"
+    )
     if is_demo and (
-        await get_demo_key_recent_uses(prisma) > MAX_DAILY_DEMO_USES
-        or model_name not in MODELS_DEMO_SUPPORTED
+        demo_key_uses > MAX_DAILY_DEMO_USES or model_name not in MODELS_DEMO_SUPPORTED
     ):
         await prisma.predictionjob.update(
             where={"id": job.id},

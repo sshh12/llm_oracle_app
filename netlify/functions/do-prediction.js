@@ -17,6 +17,7 @@ exports.handler = async (event, context) => {
       question: question,
       state: { in: [JobState.COMPLETE, JobState.PENDING] },
       modelTemperature: modelTemperature,
+      modelName: model,
     },
   });
   if (!job) {
