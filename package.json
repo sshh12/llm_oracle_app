@@ -1,5 +1,5 @@
 {
-  "name": "future-gpt",
+  "name": "llm_oracle_app",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
