@@ -1,6 +1,8 @@
 from prisma import Prisma
 from prisma.enums import JobState
 from prisma.models import PredictionJob, User
+import threading
+import queue
 import datetime
 import logging
 import os
@@ -29,7 +31,7 @@ async def get_demo_key_recent_uses(prisma: Prisma):
 
 async def run_job(prisma: Prisma, user: User, job: PredictionJob):
     logging.info(
-        f'Running job {job.id} "{job.question}" for user {user.id} ({user.credits} credits)'
+        f'Got job {job.id} "{job.question}" for user {user.id} ({user.credits} credits)'
     )
     await prisma.predictionjob.update(
         where={"id": job.id}, data={"state": JobState.RUNNING}
@@ -55,11 +57,19 @@ async def run_job(prisma: Prisma, user: User, job: PredictionJob):
 
     demo_key_uses = await get_demo_key_recent_uses(prisma)
     logging.info(
-        f"Running job {job.id} as demo: {is_demo} (cost: {model_cost}, model: {model_name}) (demo uses: {demo_key_uses})"
+        f"Running job {job.id} (cost: {model_cost}, model: {model_name}) (demo: {is_demo}, demo uses: {demo_key_uses}, max: {MAX_DAILY_DEMO_USES})"
     )
-    if is_demo and (
-        demo_key_uses > MAX_DAILY_DEMO_USES or model_name not in MODELS_DEMO_SUPPORTED
-    ):
+
+    if is_demo and model_name not in MODELS_DEMO_SUPPORTED:
+        await prisma.predictionjob.update(
+            where={"id": job.id},
+            data={
+                "state": JobState.ERROR,
+                "errorMessage": f"Sorry OpenAI is expensive! Model `{model_name}` is not supported in demo mode, buy predictions and retry.",
+            },
+        )
+        return
+    elif is_demo and (demo_key_uses > MAX_DAILY_DEMO_USES):
         await prisma.predictionjob.update(
             where={"id": job.id},
             data={
@@ -91,19 +101,28 @@ async def run_job(prisma: Prisma, user: User, job: PredictionJob):
         )
         return
 
-    logs = []
+    agent_queue = queue.Queue()
 
     def log_callback(text: str):
-        logs.append(text)
+        agent_queue.put((None, text))
 
+    run_model = MODEL_RUN_FUNCTIONS[model_name]
     try:
-        p = MODEL_RUN_FUNCTIONS[model_name](
-            job.modelTemperature / 100, job.question, log_callback
-        )
-        for log_text in logs:
-            await prisma.predictionjoblog.create(
-                data={"logText": log_text, "jobId": job.id}
-            )
+
+        def _run():
+            result = run_model(job.modelTemperature / 100, job.question, log_callback)
+            agent_queue.put((result, None))
+
+        thread = threading.Thread(target=_run)
+        thread.start()
+        while True:
+            p, log_text = agent_queue.get(timeout=300)
+            if log_text:
+                await prisma.predictionjoblog.create(
+                    data={"logText": log_text, "jobId": job.id}
+                )
+            if p:
+                break
         await prisma.predictionjob.update(
             where={"id": job.id},
             data={
