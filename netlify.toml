@@ -10,3 +10,6 @@ publish = "build/"
 
 [dev]
   port = 9000
+
+[functions]
+  external_node_modules = ["@prisma/client"]
