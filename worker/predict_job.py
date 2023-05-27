@@ -7,7 +7,12 @@ import os
 import asyncio
 
 
-from .predict_llm import validate_question, MODEL_COSTS, MODEL_RUN_FUNCTIONS, MODELS_DEMO_SUPPORTED
+from .predict_llm import (
+    validate_question,
+    MODEL_COSTS,
+    MODEL_RUN_FUNCTIONS,
+    MODELS_DEMO_SUPPORTED,
+)
 
 MAX_DAILY_DEMO_USES = int(os.environ.get("MAX_DAILY_DEMO_USES", "10"))
 
@@ -23,8 +28,12 @@ async def get_demo_key_recent_uses(prisma: Prisma):
 
 
 async def run_job(prisma: Prisma, user: User, job: PredictionJob):
-    logging.info(f'Running job {job.id} "{job.question}" for user {user.id}')
-    await prisma.predictionjob.update(where={"id": job.id}, data={"state": JobState.RUNNING})
+    logging.info(
+        f'Running job {job.id} "{job.question}" for user {user.id} ({user.credits} credits)'
+    )
+    await prisma.predictionjob.update(
+        where={"id": job.id}, data={"state": JobState.RUNNING}
+    )
 
     model_name = job.modelName
     if model_name not in MODEL_RUN_FUNCTIONS:
@@ -44,16 +53,16 @@ async def run_job(prisma: Prisma, user: User, job: PredictionJob):
     else:
         is_demo = True
 
-    if (
-        is_demo
-        and await get_demo_key_recent_uses(prisma) > MAX_DAILY_DEMO_USES
+    logging.info(f"Running job {job.id} as demo: {is_demo} (cost: {model_cost})")
+    if is_demo and (
+        await get_demo_key_recent_uses(prisma) > MAX_DAILY_DEMO_USES
         or model_name not in MODELS_DEMO_SUPPORTED
     ):
         await prisma.predictionjob.update(
             where={"id": job.id},
             data={
                 "state": JobState.ERROR,
-                "errorMessage": "Sorry OpenAI is expensive! The daily limit of free uses has run out, buy more predictions, wait a day, or try again.",
+                "errorMessage": "Sorry OpenAI is expensive! The daily limit of free uses has run out, buy more predictions, switch models, or try again.",
             },
         )
         return
@@ -86,9 +95,13 @@ async def run_job(prisma: Prisma, user: User, job: PredictionJob):
         logs.append(text)
 
     try:
-        p = MODEL_RUN_FUNCTIONS[model_name](job.modelTemperature / 100, job.question, log_callback)
+        p = MODEL_RUN_FUNCTIONS[model_name](
+            job.modelTemperature / 100, job.question, log_callback
+        )
         for log_text in logs:
-            await prisma.predictionjoblog.create(data={"logText": log_text, "jobId": job.id})
+            await prisma.predictionjoblog.create(
+                data={"logText": log_text, "jobId": job.id}
+            )
         await prisma.predictionjob.update(
             where={"id": job.id},
             data={
@@ -98,7 +111,10 @@ async def run_job(prisma: Prisma, user: User, job: PredictionJob):
             },
         )
         if not is_demo:
-            await prisma.user.update(where={"id": user.id}, data={"credits": user.credits - MODEL_COSTS[model_name]})
+            await prisma.user.update(
+                where={"id": user.id},
+                data={"credits": user.credits - MODEL_COSTS[model_name]},
+            )
     except Exception as e:
         logging.error(e)
         await prisma.predictionjob.update(
@@ -116,7 +132,9 @@ async def main():
     await prisma.connect()
 
     while True:
-        pending_jobs = await prisma.predictionjob.find_many(where={"state": JobState.PENDING}, include={"user": True})
+        pending_jobs = await prisma.predictionjob.find_many(
+            where={"state": JobState.PENDING}, include={"user": True}
+        )
         for job in pending_jobs:
             await run_job(prisma, job.user, job)
         await asyncio.sleep(30)
