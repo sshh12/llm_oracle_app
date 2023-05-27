@@ -3,7 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 exports.handler = async (event, context) => {
-  const { model, temp, public, userId, q } = event.queryStringParameters;
+  const { userId } = event.queryStringParameters;
   if (!userId) {
     return {
       statusCode: 400,
