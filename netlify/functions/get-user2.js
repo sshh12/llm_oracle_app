@@ -1,9 +1,9 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient, JobState } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
 exports.handler = async (event, context) => {
-  const { userId } = event.queryStringParameters;
+  const { model, temp, public, userId, q } = event.queryStringParameters;
   if (!userId) {
     return {
       statusCode: 400,
@@ -19,6 +19,10 @@ exports.handler = async (event, context) => {
   ]);
   return {
     statusCode: 200,
-    body: JSON.stringify({ id: user.id, credits: user.credits }),
+    body: JSON.stringify({
+      id: user.id,
+      credits: user.credits,
+      state: JobState.COMPLETE,
+    }),
   };
 };
