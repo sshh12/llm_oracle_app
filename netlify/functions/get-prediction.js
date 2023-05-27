@@ -3,17 +3,18 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 exports.handler = async (event, context) => {
-  const { model, temp, public, userId, q } = event.queryStringParameters;
+  const { model, temperature, isPublic, userId, question } =
+    event.queryStringParameters;
   if (!userId) {
     return {
       statusCode: 400,
       body: '{}',
     };
   }
-  const modelTemperature = parseInt(temp);
+  const modelTemperature = parseInt(temperature);
   let job = await prisma.PredictionJob.findFirst({
     where: {
-      question: q,
+      question: question,
       state: { in: ['COMPLETE', 'PENDING'] },
       modelTemperature: modelTemperature,
     },
@@ -23,9 +24,9 @@ exports.handler = async (event, context) => {
       data: {
         userId: userId,
         modelName: model,
-        question: q,
+        question: question,
         modelTemperature: modelTemperature,
-        public: public === 'true',
+        public: isPublic === 'true',
         resultProbability: 50,
         state: 'PENDING',
       },
