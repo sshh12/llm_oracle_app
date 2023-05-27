@@ -14,7 +14,7 @@ from .predict_llm import (
     MODELS_DEMO_SUPPORTED,
 )
 
-MAX_DAILY_DEMO_USES = int(os.environ.get("MAX_DAILY_DEMO_USES", "10"))
+MAX_DAILY_DEMO_USES = int(os.environ.get("MAX_DAILY_DEMO_USES", "100"))
 
 
 async def get_demo_key_recent_uses(prisma: Prisma):

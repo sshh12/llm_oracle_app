@@ -108,7 +108,7 @@ function Result({ userId }) {
       )}
       {(jobState === null || jobState.state === 'PENDING') && (
         <VStack spacing={7}>
-          <Text>Waiting to start...</Text>
+          <Text>Waiting to start... (~ 1 min)</Text>
           <Spinner size="xl" />
         </VStack>
       )}
