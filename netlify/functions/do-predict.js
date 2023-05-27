@@ -1,4 +1,4 @@
-const { PrismaClient, JobState } = require('@prisma/client');
+const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
@@ -14,7 +14,7 @@ exports.handler = async (event, context) => {
   let job = await prisma.PredictionJob.findFirst({
     where: {
       question: q,
-      state: { in: [JobState.COMPLETE, JobState.PENDING] },
+      state: { in: ['COMPLETE', 'PENDING'] },
       modelTemperature: modelTemperature,
     },
   });
@@ -27,7 +27,7 @@ exports.handler = async (event, context) => {
         modelTemperature: modelTemperature,
         public: public === 'true',
         resultProbability: 50,
-        state: JobState.PENDING,
+        state: 'PENDING',
       },
     });
   }
