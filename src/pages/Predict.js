@@ -58,9 +58,9 @@ function Predict({ userId, user }) {
 
   const modelName = useGPT4 ? 'gpt4' : 'gpt3';
   const question = q || placeholderPrediction;
-  const predictURL = `/.netlify/functions/get-prediction?q=${window.encodeURIComponent(
+  const predictURL = `/.netlify/functions/do-prediction?question=${window.encodeURIComponent(
     question
-  )}&model=${modelName}&temp=${modelTemp}&public=${publicVisable}&userId=${userId}`;
+  )}&model=${modelName}&temperature=${modelTemp}&isPublic=${publicVisable}&userId=${userId}`;
 
   const onPredict = () => {
     window.location.href = predictURL;
