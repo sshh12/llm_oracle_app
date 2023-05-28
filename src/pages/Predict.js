@@ -120,7 +120,8 @@ function Predict({ userId, user }) {
                   onMouseLeave={() => setModelToolTip(false)}
                   borderBotton="1px #8b8b8b dotted"
                 >
-                  Improve results with GPT-4
+                  Improve results with GPT-4 <br />
+                  (requires paid predictions)
                 </Text>
               </Tooltip>
             </FormLabel>

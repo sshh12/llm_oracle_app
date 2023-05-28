@@ -65,7 +65,7 @@ async def run_job(prisma: Prisma, user: User, job: PredictionJob):
             where={"id": job.id},
             data={
                 "state": JobState.ERROR,
-                "errorMessage": f"Sorry OpenAI is expensive! Model `{model_name}` is not supported in demo mode, buy predictions and retry.",
+                "errorMessage": f"Sorry OpenAI is expensive! Model `{model_name}` is not supported in demo mode, change models or buy predictions and retry.",
             },
         )
         return
