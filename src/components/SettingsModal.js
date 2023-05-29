@@ -36,7 +36,10 @@ function SettingsModal({
     <>
       <Button
         m={2}
-        onClick={onOpen}
+        onClick={() => {
+          onOpen();
+          window.gtag('event', 'opened_settings');
+        }}
         rightIcon={<SettingsIcon />}
         colorScheme="teal"
         variant="solid"

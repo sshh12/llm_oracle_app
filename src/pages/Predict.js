@@ -63,6 +63,7 @@ function Predict({ userId, user }) {
   )}&model=${modelName}&temperature=${modelTemp}&isPublic=${publicVisable}&userId=${userId}`;
 
   const onPredict = () => {
+    window.gtag('event', 'do_prediction');
     window.location.href = predictURL;
   };
 
@@ -129,7 +130,10 @@ function Predict({ userId, user }) {
             <Switch
               id="better-model"
               isChecked={useGPT4}
-              onChange={e => setUseGPT4(e.target.checked)}
+              onChange={e => {
+                setUseGPT4(e.target.checked);
+                window.gtag('event', 'use_gpt4_clicked');
+              }}
             />
           </FormControl>
         </Flex>

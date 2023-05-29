@@ -191,7 +191,14 @@ function AnalysisModalButton({ job }) {
 
   return (
     <>
-      <Button onClick={onOpen} rightIcon={<ChatIcon />} variant="outline">
+      <Button
+        onClick={() => {
+          onOpen();
+          window.gtag('event', 'opened_analysis');
+        }}
+        rightIcon={<ChatIcon />}
+        variant="outline"
+      >
         View analysis
       </Button>
 
@@ -224,7 +231,10 @@ function ShareModalButton({ job }) {
   return (
     <>
       <Button
-        onClick={onOpen}
+        onClick={() => {
+          onOpen();
+          window.gtag('event', 'opened_share');
+        }}
         rightIcon={<ExternalLinkIcon />}
         colorScheme="teal"
         variant="solid"
