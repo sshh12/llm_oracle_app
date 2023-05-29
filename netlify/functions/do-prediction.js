@@ -24,6 +24,7 @@ exports.handler = async (event, context) => {
         public: isPublic === 'true',
         resultProbability: 50,
         state: JobState.PENDING,
+        createdAt: new Date()
       },
     });
   }
