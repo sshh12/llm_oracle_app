@@ -5,10 +5,33 @@ const prisma = new PrismaClient();
 
 const APP_ID = 'oracle';
 
+async function onSessionCompleted(checkoutSessionCompleted) {
+  const refId = checkoutSessionCompleted.client_reference_id;
+  const [appId, userId] = refId.split(':::');
+  if (appId !== APP_ID) {
+    console.warn('AppId mismatch', appId);
+  } else if (userId) {
+    const user = await prisma.User.findFirst({
+      where: { userId: userId },
+    });
+    await prisma.User.update({
+      where: { id: userId },
+      data: {
+        credits: user.credits + 100,
+        creditsPurchased: user.creditsPurchased + 100,
+        email: checkoutSessionCompleted.customer_details.email,
+      },
+    });
+  } else {
+    console.error('No userId found for checkout session');
+  }
+}
+
 exports.handler = async (event, context) => {
   const sig = event.headers['stripe-signature'];
 
   let stripeEvent;
+  let error = null;
   try {
     stripeEvent = stripe.webhooks.constructEvent(
       event.body,
@@ -21,34 +44,20 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({ success: false, error: err.message }),
     };
   }
-  switch (stripeEvent.type) {
-    case 'checkout.session.completed':
-      const checkoutSessionCompleted = stripeEvent.data.object;
-      const refId = checkoutSessionCompleted.client_reference_id;
-      const [appId, userId] = refId.split(':::');
-      if (appId !== APP_ID) {
-        console.warn('AppId mismatch', appId);
-      } else if (userId) {
-        const user = await prisma.User.findFirst({
-          where: { userId: userId },
-        });
-        await prisma.User.update({
-          where: { id: userId },
-          data: {
-            credits: user.credits + 100,
-            creditsPurchased: user.creditsPurchased + 100,
-            email: checkoutSessionCompleted.customer_details.email,
-          },
-        });
-      } else {
-        console.error('No userId found for checkout session');
-      }
-      break;
-    default:
-      console.log(`Unhandled event type ${stripeEvent.type}`);
+  try {
+    switch (stripeEvent.type) {
+      case 'checkout.session.completed':
+        const checkoutSessionCompleted = stripeEvent.data.object;
+        await onSessionCompleted(checkoutSessionCompleted);
+        break;
+      default:
+        console.log(`Unhandled event type ${stripeEvent.type}`);
+    }
+  } catch (err) {
+    err = '' + error;
   }
   return {
     statusCode: 200,
-    body: JSON.stringify({ success: true }),
+    body: JSON.stringify({ success: true, error: error }),
   };
 };
