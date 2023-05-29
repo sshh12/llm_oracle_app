@@ -12,8 +12,14 @@ exports.handler = async (event, context) => {
     };
   }
   const modelTemperature = parseInt(temperature);
-  let job = null;
-
+  let job = await prisma.PredictionJob.findFirst({
+    where: {
+      question: question,
+      state: { in: [JobState.COMPLETE, JobState.PENDING] },
+      modelTemperature: modelTemperature,
+      modelName: model,
+    },
+  });
   if (!job) {
     job = await prisma.PredictionJob.create({
       data: {
@@ -24,7 +30,6 @@ exports.handler = async (event, context) => {
         public: isPublic === 'true',
         resultProbability: 50,
         state: JobState.PENDING,
-        createdAt: new Date()
       },
     });
   }
