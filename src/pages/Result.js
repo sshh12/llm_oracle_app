@@ -140,7 +140,7 @@ function Result({ userId }) {
         {userId && (
           <Button rightIcon={<ExternalLinkIcon />} variant="outline">
             <Link
-              href={`${STRIPE_LINK}?client_reference_id=oracle:::${userId}`}
+              href={`${STRIPE_LINK}?client_reference_id=oracle__${userId}`}
               isExternal
             >
               Buy more predictions

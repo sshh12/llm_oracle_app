@@ -142,7 +142,7 @@ function Predict({ userId, user }) {
           {userId && (
             <Button m={2} rightIcon={<ExternalLinkIcon />} variant="outline">
               <Link
-                href={`${STRIPE_LINK}?client_reference_id=oracle:::${userId}`}
+                href={`${STRIPE_LINK}?client_reference_id=oracle__${userId}`}
                 isExternal
               >
                 Get predictions ({user?.credits})
