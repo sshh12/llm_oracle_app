@@ -14,7 +14,7 @@ exports.handler = async (event, context) => {
     prisma.User.upsert({
       where: { id: userId },
       update: {},
-      create: { id: userId, credits: 1 },
+      create: { id: userId, credits: 0 },
     }),
   ]);
   return {
